@@ -1,3 +1,5 @@
+import { METHODS } from "http";
+
 const RouteMethods = {
   GET: "GET",
   POST: "POST",
@@ -13,6 +15,10 @@ type RouterHandlerResponse = void;
 type RouteMiddleware = () => RouterHandlerResponse;
 
 type RouteHandler = () => RouterHandlerResponse;
+
+type RequestInformations = {
+  params: Map<string, string>;
+};
 
 export type RouteFragmentOptions = {
   parameterName?: string;
@@ -34,35 +40,19 @@ class RouteFragmenet {
     return this.parameterName;
   }
 
-  get(): RouterHandlerResponse {
-    return this.handleMethod(RouteMethods.GET);
-  }
-
-  post(): RouterHandlerResponse {
-    return this.handleMethod(RouteMethods.POST);
-  }
-
-  put(): RouterHandlerResponse {
-    return this.handleMethod(RouteMethods.PUT);
-  }
-
-  delete(): RouterHandlerResponse {
-    return this.handleMethod(RouteMethods.DELETE);
-  }
-
-  patch(): RouterHandlerResponse {
-    return this.handleMethod(RouteMethods.PATCH);
-  }
-
-  private handleMethod(method: RouteMethod): RouterHandlerResponse {
-    console.log(`Will call get for the ${this.fragment}`);
+  handle(
+    method: RouteMethod,
+    info: RequestInformations
+  ): RouterHandlerResponse {
     if (!this.handlers.has(method)) {
-      console.error(`Usuported method type ${method} for ${this.fragment}`);
+      console.error(`Usuported method type ${method}`);
       return;
     }
 
     const handler = this.handlers.get(method);
     // @TODO when will integrate will node server
+    console.log("--------------------");
+    console.log("request parameters: ", info.params.entries());
     return handler.apply(this);
   }
 }
@@ -88,6 +78,35 @@ class Router {
     }
 
     fragmenet.handlers.set(method, handler);
+  }
+
+  // For now just to simulate that the correct handler is beeing called
+  handleRequest(route: string, method: RouteMethod) {
+    const parts = this.getRouteParts(route);
+    let currentFragment = this.__ROUTER__;
+    const params = new Map<string, string>();
+
+    for (let part of parts) {
+      const routeFragment =
+        this.findChildrenFragment(
+          currentFragment,
+          this.extractFramgentNameFromPart(part)
+        ) || this.findChildreFragmentOfTypeParam(currentFragment);
+
+      if (!routeFragment) {
+        // @Todo will respond with 404 when integrated with the server
+        console.error(`${method} ${route} - Status 404`);
+        return;
+      }
+
+      if (!!routeFragment.getParameterName()) {
+        params.set(routeFragment.getParameterName(), part);
+      }
+
+      currentFragment = routeFragment;
+    }
+
+    currentFragment.handle(method, { params });
   }
 
   private findOrCreateRouteFragment(route: string): RouteFragmenet {
@@ -119,6 +138,18 @@ class Router {
   ): RouteFragmenet | null {
     for (const currentRouteFragment of routeFragment.children) {
       if (currentRouteFragment.fragment === fragmentName) {
+        return currentRouteFragment;
+      }
+    }
+
+    return null;
+  }
+
+  private findChildreFragmentOfTypeParam(
+    routeFragment: RouteFragmenet
+  ): RouteFragmenet | null {
+    for (const currentRouteFragment of routeFragment.children) {
+      if (currentRouteFragment.fragment === this.PARAMETER_FRAGMENT_NAME) {
         return currentRouteFragment;
       }
     }
@@ -164,10 +195,23 @@ const router = new Router();
       insertHandler("/users/posts", "GET", () => {});
 */
 
-router.insertHandler("/users", "GET", () => {});
-router.insertHandler("/users/:userId/articles", "GET", () => {});
-router.insertHandler("/users/:userId/images", "GET", () => {});
-router.insertHandler("/users/:userId/posts/:postId/comments", "GET", () => {});
-router.insertHandler("/users/:userId/posts/:postId/comments", "POST", () => {});
+router.insertHandler("/users", "GET", () => {
+  console.log("GET users");
+});
+router.insertHandler("/users/:userId", "GET", () => {
+  console.log("GET users/:userId");
+});
+router.insertHandler("/users/:userId/articles", "GET", () => {
+  console.log("GET user articles");
+});
+router.insertHandler("/users/:userId/images", "GET", () => {
+  console.log("GET user images");
+});
+router.insertHandler("/users/:userId/posts/:postId/comments", "GET", () => {
+  console.log("GET user posts comment");
+});
+router.insertHandler("/users/:userId/posts/:postId/comments", "POST", () => {
+  console.log("POST user posts comments");
+});
 
-console.log(JSON.stringify(router.__ROUTER__));
+router.handleRequest("/users/11", "GET");

@@ -1,4 +1,4 @@
-const RouteMethods = {
+export const RouteMethods = {
   GET: "GET",
   POST: "POST",
   PUT: "PUT",
@@ -6,15 +6,15 @@ const RouteMethods = {
   PATCH: "PATCH",
 } as const;
 
-type RouteMethod = keyof typeof RouteMethods;
+export type RouteMethod = keyof typeof RouteMethods;
 
-type RouterHandlerResponse = void;
+export type RouterHandlerResponse = void;
 
-type RouteMiddleware = () => RouterHandlerResponse;
+export type RouteMiddleware = () => RouterHandlerResponse;
 
-type RouteHandler = () => RouterHandlerResponse;
+export type RouteHandler = () => RouterHandlerResponse;
 
-interface RequestInformations {
+export interface RequestInformations {
   params: Map<string, string>;
 }
 
@@ -48,9 +48,6 @@ class RouteFragmenet {
     }
 
     const handler = this.handlers.get(method);
-    // @TODO when will integrate will node server
-    console.log("--------------------");
-    console.log("request parameters: ", info.params.entries());
     handler!.apply(this);
   }
 }

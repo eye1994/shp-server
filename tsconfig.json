@@ -16,5 +16,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "lib": ["es2018"]
-  }
+  },
+  "exclude": ["tests"]
 }

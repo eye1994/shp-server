@@ -1,4 +1,4 @@
-import http from "http";
+import http, { ServerResponse } from "http";
 import { Router } from "./router";
 import { RouteHandler } from "./types/response-handler";
 import { RouteMethod } from "./types/route-method";
@@ -33,7 +33,7 @@ export class SHPServer {
     this.httpServer.listen(port);
   }
 
-  private onRequest(req, res) {
+  private onRequest(req: http.IncomingMessage, res: ServerResponse) {
     const url = req.url;
     const method = req.method;
 
@@ -45,6 +45,6 @@ export class SHPServer {
 
     const response = this.router.handleRequest(url, method as RouteMethod);
     res.writeHead(response.status, response?.headers);
-    res.end(JSON.stringify(response.data));
+    res.end(JSON.stringify(response.body));
   }
 }

@@ -48,7 +48,7 @@ class RouteFragmenet {
     }
 
     const handler = this.handlers.get(method);
-    handler!.apply(this);
+    return handler!.apply(this);
   }
 }
 
@@ -101,7 +101,7 @@ export default class Router {
       currentFragment = routeFragment;
     }
 
-    currentFragment.handle(method, { params });
+    return currentFragment.handle(method, { params });
   }
 
   private findOrCreateRouteFragment(route: string): RouteFragmenet {

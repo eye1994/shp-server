@@ -1,62 +1,12 @@
-export const RouteMethods = {
-  GET: "GET",
-  POST: "POST",
-  PUT: "PUT",
-  DELETE: "DELETE",
-  PATCH: "PATCH",
-} as const;
+import { JSONResponse } from "./json-response";
+import { Request } from "./request";
+import { Response } from "./response";
+import { RouteFragmenet } from "./route-fragment";
+import { RouteHandler } from "./types/response-handler";
+import { RouteFragmentOptions } from "./types/route-fragment-options";
+import { RouteMethod } from "./types/route-method";
 
-export type RouteMethod = keyof typeof RouteMethods;
-
-export type RouterHandlerResponse = void;
-
-export type RouteMiddleware = () => RouterHandlerResponse;
-
-export type RouteHandler = () => RouterHandlerResponse;
-
-export interface RequestInformations {
-  params: Map<string, string>;
-}
-
-export interface RouteFragmentOptions {
-  parameterName?: string;
-}
-
-class RouteFragmenet {
-  fragment: string;
-  middlewares: RouteMiddleware[] = [];
-  handlers = new Map<RouteMethod, RouteHandler>();
-  children: RouteFragmenet[] = [];
-  private readonly parameterName?: string;
-
-  constructor(fragment: string, options?: RouteFragmentOptions) {
-    this.fragment = fragment;
-    this.parameterName = options?.parameterName;
-  }
-
-  getParameterName(): string | undefined {
-    return this.parameterName;
-  }
-
-  handle(
-    method: RouteMethod,
-    info: RequestInformations
-  ): RouterHandlerResponse {
-    if (!this.handlers.has(method)) {
-      console.error(`Usuported method type ${method}`);
-      return;
-    }
-
-    const handler = this.handlers.get(method);
-    return handler!.apply(this);
-  }
-}
-
-const createRouteFragment = (fragment: string): RouteFragmenet => {
-  return new RouteFragmenet(fragment);
-};
-
-export default class Router {
+export class Router {
   __ROUTER__: RouteFragmenet;
 
   private readonly PARAMETER_FRAGMENT_NAME = "$$PARAM$$";
@@ -76,10 +26,10 @@ export default class Router {
   }
 
   // For now just to simulate that the correct handler is beeing called
-  handleRequest(route: string, method: RouteMethod) {
+  handleRequest(route: string, method: RouteMethod): Response {
     const parts = this.getRouteParts(route);
     let currentFragment = this.__ROUTER__;
-    const params = new Map<string, string>();
+    const request = new Request();
 
     for (const part of parts) {
       const routeFragment =
@@ -91,17 +41,17 @@ export default class Router {
       if (routeFragment == null) {
         // @Todo will respond with 404 when integrated with the server
         console.error(`${method} ${route} - Status 404`);
-        return;
+        return new JSONResponse({}, 404);
       }
 
       if (!!routeFragment.getParameterName()) {
-        params.set(routeFragment.getParameterName() as string, part);
+        request.params.set(routeFragment.getParameterName() as string, part);
       }
 
       currentFragment = routeFragment;
     }
 
-    return currentFragment.handle(method, { params });
+    return currentFragment.handle(method, request);
   }
 
   private findOrCreateRouteFragment(route: string): RouteFragmenet {

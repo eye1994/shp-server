@@ -1,4 +1,5 @@
-import Router, { RouteMethods } from "./../lib/router";
+import { Router } from "../lib/router";
+import { RouteMethods } from "./../lib";
 
 /*
   @Todos:
@@ -100,5 +101,17 @@ describe("Router", () => {
       router.handleRequest("/users/222/posts/1/comments", RouteMethods.POST);
       expect(postPostCommentsHandler).toHaveBeenCalledTimes(1);
     });
+  });
+
+  describe("route params", () => {
+    it("should exteact the parameters from route and make them available in the Request param", () => {
+      getPostCommentsHandler.mockReset();
+      router.handleRequest("/users/222/posts/1/comments", RouteMethods.GET);
+      const request = getPostCommentsHandler.mock.calls[0][0];
+      const params = request.params;
+      expect(params.size).toEqual(2);
+      expect(params.get('userId')).toEqual('222');
+      expect(params.get('postId')).toEqual('1');
+    })
   });
 });

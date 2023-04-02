@@ -1,5 +1,3 @@
-import { METHODS } from "http";
-
 const RouteMethods = {
   GET: "GET",
   POST: "POST",
@@ -16,27 +14,27 @@ type RouteMiddleware = () => RouterHandlerResponse;
 
 type RouteHandler = () => RouterHandlerResponse;
 
-type RequestInformations = {
+interface RequestInformations {
   params: Map<string, string>;
-};
+}
 
-export type RouteFragmentOptions = {
+export interface RouteFragmentOptions {
   parameterName?: string;
-};
+}
 
 class RouteFragmenet {
   fragment: string;
   middlewares: RouteMiddleware[] = [];
-  handlers: Map<RouteMethod, RouteHandler> = new Map();
+  handlers = new Map<RouteMethod, RouteHandler>();
   children: RouteFragmenet[] = [];
-  private parameterName?: string;
+  private readonly parameterName?: string;
 
   constructor(fragment: string, options?: RouteFragmentOptions) {
     this.fragment = fragment;
     this.parameterName = options?.parameterName;
   }
 
-  getParameterName() {
+  getParameterName(): string | undefined {
     return this.parameterName;
   }
 
@@ -53,7 +51,7 @@ class RouteFragmenet {
     // @TODO when will integrate will node server
     console.log("--------------------");
     console.log("request parameters: ", info.params.entries());
-    return handler.apply(this);
+    handler!.apply(this);
   }
 }
 
@@ -61,10 +59,10 @@ const createRouteFragment = (fragment: string): RouteFragmenet => {
   return new RouteFragmenet(fragment);
 };
 
-class Router {
+export default class Router {
   __ROUTER__: RouteFragmenet;
 
-  private PARAMETER_FRAGMENT_NAME = "$$PARAM$$";
+  private readonly PARAMETER_FRAGMENT_NAME = "$$PARAM$$";
 
   constructor() {
     this.__ROUTER__ = new RouteFragmenet("/");
@@ -86,21 +84,21 @@ class Router {
     let currentFragment = this.__ROUTER__;
     const params = new Map<string, string>();
 
-    for (let part of parts) {
+    for (const part of parts) {
       const routeFragment =
         this.findChildrenFragment(
           currentFragment,
           this.extractFramgentNameFromPart(part)
         ) || this.findChildreFragmentOfTypeParam(currentFragment);
 
-      if (!routeFragment) {
+      if (routeFragment == null) {
         // @Todo will respond with 404 when integrated with the server
         console.error(`${method} ${route} - Status 404`);
         return;
       }
 
       if (!!routeFragment.getParameterName()) {
-        params.set(routeFragment.getParameterName(), part);
+        params.set(routeFragment.getParameterName() as string, part);
       }
 
       currentFragment = routeFragment;
@@ -114,13 +112,13 @@ class Router {
 
     let currentFragment = this.__ROUTER__;
 
-    for (let part of parts) {
+    for (const part of parts) {
       const routeFragment = this.findChildrenFragment(
         currentFragment,
         this.extractFramgentNameFromPart(part)
       );
 
-      if (routeFragment) {
+      if (routeFragment != null) {
         currentFragment = routeFragment;
       } else {
         const fragment = this.createRouteFragmentFromPart(part);
@@ -185,33 +183,3 @@ class Router {
     return new RouteFragmenet(this.extractFramgentNameFromPart(part), options);
   }
 }
-
-const router = new Router();
-
-/*
-  @TODOS:
-  - handle the following case
-      insertHandler("/users", "GET", () => {});
-      insertHandler("/users/posts", "GET", () => {});
-*/
-
-router.insertHandler("/users", "GET", () => {
-  console.log("GET users");
-});
-router.insertHandler("/users/:userId", "GET", () => {
-  console.log("GET users/:userId");
-});
-router.insertHandler("/users/:userId/articles", "GET", () => {
-  console.log("GET user articles");
-});
-router.insertHandler("/users/:userId/images", "GET", () => {
-  console.log("GET user images");
-});
-router.insertHandler("/users/:userId/posts/:postId/comments", "GET", () => {
-  console.log("GET user posts comment");
-});
-router.insertHandler("/users/:userId/posts/:postId/comments", "POST", () => {
-  console.log("POST user posts comments");
-});
-
-router.handleRequest("/users/11", "GET");

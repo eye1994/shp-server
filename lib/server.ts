@@ -7,10 +7,10 @@ import { RouteMethods } from "./types/route-methods";
 export class SHPServer {
   private router: Router;
   private httpServer;
-  
+
   constructor() {
     this.router = new Router();
-    this.httpServer = http.createServer(this.onRequest.bind(this))
+    this.httpServer = http.createServer(this.onRequest.bind(this));
   }
 
   get(route: string, handler: RouteHandler) {
@@ -24,7 +24,7 @@ export class SHPServer {
   put(route: string, handler: RouteHandler) {
     return this.router.insertHandler(route, RouteMethods.PUT, handler);
   }
-  
+
   delete(route: string, handler: RouteHandler) {
     return this.router.insertHandler(route, RouteMethods.DELETE, handler);
   }
@@ -34,16 +34,7 @@ export class SHPServer {
   }
 
   private onRequest(req: http.IncomingMessage, res: ServerResponse) {
-    const url = req.url;
-    const method = req.method;
-
-    if (!url || !method) {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({}));
-      return;
-    }
-
-    const response = this.router.handleRequest(url, method as RouteMethod);
+    const response = this.router.handleRequest(req);
     res.writeHead(response.status, response?.headers);
     res.end(JSON.stringify(response.body));
   }

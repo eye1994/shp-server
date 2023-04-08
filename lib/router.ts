@@ -1,3 +1,4 @@
+import http from "http";
 import { JSONResponse } from "./json-response";
 import { Request } from "./request";
 import { Response } from "./response";
@@ -26,8 +27,16 @@ export class Router {
   }
 
   // For now just to simulate that the correct handler is beeing called
-  handleRequest(route: string, method: RouteMethod): Response {
-    const parts = this.getRouteParts(route);
+  // handleRequest(route: string, method: RouteMethod): Response {
+  handleRequest(req: http.IncomingMessage): Response {
+    const url = req.url;
+    const method = req.method as RouteMethod;
+
+    if (!url || !method) {
+      return new JSONResponse({}, 404);
+    }
+
+    const parts = this.getRouteParts(url);
     let currentFragment = this.__ROUTER__;
     const request = new Request();
 
@@ -39,8 +48,6 @@ export class Router {
         ) || this.findChildreFragmentOfTypeParam(currentFragment);
 
       if (routeFragment == null) {
-        // @Todo will respond with 404 when integrated with the server
-        console.error(`${method} ${route} - Status 404`);
         return new JSONResponse({}, 404);
       }
 

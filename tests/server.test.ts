@@ -26,34 +26,18 @@ describe("SHPServer", () => {
     expect(http.createServer).toHaveBeenCalled();
   });
 
-  it("should respond with 404 when the url is missing from the request object", () => {
-    const server = new SHPServer();
-    const mockResponse = { writeHead: jest.fn(), end: jest.fn() };
-    callback({ method: "GET" }, mockResponse);
-    expect404Response(mockResponse);
-  });
-
-  it("should respond with 404 when the method is missing from the request object", () => {
-    const server = new SHPServer();
-    const mockResponse = { writeHead: jest.fn(), end: jest.fn() };
-    callback({ url: "" }, mockResponse);
-    expect404Response(mockResponse);
-  });
-
   it("should let the router handle the request and respond to the http call with the response from handler", () => {
     const server = new SHPServer();
+    const request = { url: "/users/1", method: "GET" } as http.IncomingMessage;
     const mockResponse = { writeHead: jest.fn(), end: jest.fn() };
     // @ts-ignore
     const mockRouterInstance = Router.mock.instances[0];
     mockRouterInstance.handleRequest.mockReturnValue(
       new JSONResponse({ test: "testing" }, 201)
     );
-    callback({ url: "/users/1", method: "GET" }, mockResponse);
+    callback(request, mockResponse);
     expect(mockRouterInstance.handleRequest).toBeCalledTimes(1);
-    expect(mockRouterInstance.handleRequest).toHaveBeenCalledWith(
-      "/users/1",
-      RouteMethods.GET
-    );
+    expect(mockRouterInstance.handleRequest).toHaveBeenCalledWith(request);
     expectJSONResponse({ test: "testing" }, 201, mockResponse);
   });
 

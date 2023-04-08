@@ -2,6 +2,7 @@ import http from "http";
 import { Response, RouteMethods, SHPServer } from "../lib";
 import { Router } from "../lib/router";
 import { Request } from "../lib/request";
+import { createRequestObject } from "./helpers/create-request-object";
 
 jest.mock("../lib/router");
 
@@ -26,16 +27,18 @@ describe("SHPServer", () => {
     expect(http.createServer).toHaveBeenCalled();
   });
 
-  it("should let the router handle the request and respond to the http call with the response from handler", () => {
+  it("should let the router handle the request and respond to the http call with the response from handler", async () => {
     const server = new SHPServer();
-    const request = { url: "/users/1", method: "GET" } as http.IncomingMessage;
+    const request = createRequestObject("/usesrs/1", RouteMethods.GET);
     const mockResponse = { writeHead: jest.fn(), end: jest.fn() };
     // @ts-ignore
     const mockRouterInstance = Router.mock.instances[0];
-    mockRouterInstance.handleRequest.mockReturnValue(
-      new Response({ test: "testing" }, { status: 201 })
+    const handlerResponse = new Promise((resolve) =>
+      resolve(new Response({ test: "testing" }, { status: 201 }))
     );
+    mockRouterInstance.handleRequest.mockReturnValue(handlerResponse);
     callback(request, mockResponse);
+    await handlerResponse;
     expect(mockRouterInstance.handleRequest).toBeCalledTimes(1);
     expect(mockRouterInstance.handleRequest).toHaveBeenCalledWith(request);
     expectJSONResponse({ test: "testing" }, 201, mockResponse);
@@ -90,7 +93,7 @@ function expectJSONResponse(
   expect(mockResponse.writeHead).toBeCalledTimes(1);
   expect(mockResponse.end).toBeCalledTimes(1);
   expect(mockResponse.writeHead).toBeCalledWith(status, {
-    "Content-Type": "application/json",
+    "content-type": "application/json",
   });
   expect(mockResponse.end).toBeCalledWith(JSON.stringify(body));
 }

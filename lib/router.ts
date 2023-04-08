@@ -1,5 +1,5 @@
 import http from "http";
-import { Request } from "./request";
+import { createResponse, Request } from "./request";
 import { Response } from "./response";
 import { RouteFragmenet } from "./route-fragment";
 import { RouteHandler } from "./types/response-handler";
@@ -27,7 +27,7 @@ export class Router {
 
   // For now just to simulate that the correct handler is beeing called
   // handleRequest(route: string, method: RouteMethod): Response {
-  handleRequest(req: http.IncomingMessage): Response {
+  async handleRequest(req: http.IncomingMessage): Promise<Response> {
     const url = req.url;
     const method = req.method as RouteMethod;
 
@@ -37,7 +37,7 @@ export class Router {
 
     const parts = this.getRouteParts(url);
     let currentFragment = this.__ROUTER__;
-    const request = new Request();
+    const request = await createResponse(req);
 
     for (const part of parts) {
       const routeFragment =

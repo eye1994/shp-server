@@ -1,1 +1,1 @@
-export type Headers = Map<string, string | number>;
+export type Headers = Map<string, string | string[] | undefined>;

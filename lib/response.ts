@@ -1,24 +1,9 @@
-import http from "http";
-
-export type Headers = Map<string, string | number>;
-
-export type JSONData =
-  | {
-      [key: string]: string | number | JSONData | undefined | null;
-    }
-  | JSONData[]
-  | string[]
-  | number[];
-
-export type ResponseBody = string | {} | ResponseBody[];
-
-export type ResponseOptions = {
-  status?: number;
-  headers?: Map<string, string | number> | { [key: string]: string | number };
-};
+import { Headers } from "./types/headers";
+import { JSONData } from "./types/json-data";
+import { ResponseOptions } from "./types/response-options";
 
 export class Response {
-  headers: Headers = new Map<string, string | number>();
+  headers: Headers = new Map<string, string | string[] | undefined>();
   status: number = 200;
 
   constructor(public body: JSONData | string, options: ResponseOptions = {}) {
@@ -34,8 +19,8 @@ export class Response {
       this.headers = new Map(Object.entries(headers));
     }
 
-    if (typeof body !== "string" && !this.headers.has("Content-Type")) {
-      this.headers.set("Content-Type", "application/json");
+    if (typeof body !== "string" && !this.headers.has("content-type")) {
+      this.headers.set("content-type", "application/json");
     }
   }
 }

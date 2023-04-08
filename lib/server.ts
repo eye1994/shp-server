@@ -33,15 +33,17 @@ export class SHPServer {
   }
 
   private onRequest(req: http.IncomingMessage, res: ServerResponse) {
-    const response = this.router.handleRequest(req);
-    res.writeHead(
-      response.status,
-      Object.fromEntries(response?.headers.entries())
-    );
-    if (typeof response.body === "string") {
-      res.end(response.body);
-    } else {
-      res.end(JSON.stringify(response.body));
-    }
+    this.router.handleRequest(req).then((response) => {
+      res.writeHead(
+        response.status,
+        Object.fromEntries(response?.headers.entries())
+      );
+
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        res.end(JSON.stringify(response.body));
+      } else {
+        res.end(response.body);
+      }
+    });
   }
 }

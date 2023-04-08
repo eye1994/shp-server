@@ -1,3 +1,1 @@
-export type Headers = {
-  [key: string]: string;
-}
+export type Headers = Map<string, string | number>;

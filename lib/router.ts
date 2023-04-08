@@ -1,5 +1,4 @@
 import http from "http";
-import { JSONResponse } from "./json-response";
 import { Request } from "./request";
 import { Response } from "./response";
 import { RouteFragmenet } from "./route-fragment";
@@ -33,7 +32,7 @@ export class Router {
     const method = req.method as RouteMethod;
 
     if (!url || !method) {
-      return new JSONResponse({}, 404);
+      return new Response({}, { status: 404 });
     }
 
     const parts = this.getRouteParts(url);
@@ -48,7 +47,7 @@ export class Router {
         ) || this.findChildreFragmentOfTypeParam(currentFragment);
 
       if (routeFragment == null) {
-        return new JSONResponse({}, 404);
+        return new Response({}, { status: 404 });
       }
 
       if (!!routeFragment.getParameterName()) {

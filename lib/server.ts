@@ -1,7 +1,6 @@
 import http, { ServerResponse } from "http";
 import { Router } from "./router";
 import { RouteHandler } from "./types/response-handler";
-import { RouteMethod } from "./types/route-method";
 import { RouteMethods } from "./types/route-methods";
 
 export class SHPServer {
@@ -35,7 +34,14 @@ export class SHPServer {
 
   private onRequest(req: http.IncomingMessage, res: ServerResponse) {
     const response = this.router.handleRequest(req);
-    res.writeHead(response.status, response?.headers);
-    res.end(JSON.stringify(response.body));
+    res.writeHead(
+      response.status,
+      Object.fromEntries(response?.headers.entries())
+    );
+    if (typeof response.body === "string") {
+      res.end(response.body);
+    } else {
+      res.end(JSON.stringify(response.body));
+    }
   }
 }

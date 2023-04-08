@@ -1,5 +1,5 @@
 import http from "http";
-import { JSONResponse, RouteMethods, SHPServer } from "../lib";
+import { Response, RouteMethods, SHPServer } from "../lib";
 import { Router } from "../lib/router";
 import { Request } from "../lib/request";
 
@@ -33,7 +33,7 @@ describe("SHPServer", () => {
     // @ts-ignore
     const mockRouterInstance = Router.mock.instances[0];
     mockRouterInstance.handleRequest.mockReturnValue(
-      new JSONResponse({ test: "testing" }, 201)
+      new Response({ test: "testing" }, { status: 201 })
     );
     callback(request, mockResponse);
     expect(mockRouterInstance.handleRequest).toBeCalledTimes(1);
@@ -53,7 +53,7 @@ describe("SHPServer", () => {
     describe(`${method.toLowerCase()}() `, () => {
       it("should insert a new handler on the router", () => {
         const handler = (req: Request) => {
-          return new JSONResponse({});
+          return new Response({});
         };
 
         const server = new SHPServer();

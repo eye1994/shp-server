@@ -4,8 +4,8 @@ import { RouteMethods } from "./../lib";
 import { createRequestObject } from "./helpers/create-request-object";
 
 /*
-  @Todos:
-  - Test and implement the folowing scenario GET /users/:id  GET /users/image it should handle correctly both cases
+  @Todo:
+  - Test and implement the following scenario GET /users/:id  GET /users/image it should handle correctly both cases
   - Test that the correct route params ar passed to the handler
   - Test that the query params ar parsed correctly and passed to the handler
 */
@@ -72,7 +72,7 @@ describe("Router", () => {
     expect(response.status).toEqual(404);
   });
 
-  describe("user CRUD requeests", () => {
+  describe("user CRUD requests", () => {
     it("should call the getUsersHandler when a GET request is made at /users", async () => {
       await router.handleRequest(
         createRequestObject("/users", RouteMethods.GET)
@@ -136,16 +136,20 @@ describe("Router", () => {
       expect(getPostCommentsHandler).toHaveBeenCalledTimes(1);
     });
 
-    // it("should call the postPostCommentsHandler when a POST request is mate at /users/:userId/posts/:postId/comments", async () => {
-    //   await router.handleRequest(
-    //     createRequestObject("/users/222/posts/1/comments", RouteMethods.POST)
-    //   );
-    //   expect(postPostCommentsHandler).toHaveBeenCalledTimes(1);
-    // });
+    it("should call the postPostCommentsHandler when a POST request is mate at /users/:userId/posts/:postId/comments", async () => {
+      await router.handleRequest(
+        createRequestObject(
+          "/users/222/posts/1/comments",
+          RouteMethods.POST,
+          {}
+        )
+      );
+      expect(postPostCommentsHandler).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("route params", () => {
-    it("should exteact the parameters from route and make them available in the Request param", async () => {
+    it("should extract the parameters from route and make them available in the Request param", async () => {
       getPostCommentsHandler.mockReset();
       await router.handleRequest(
         createRequestObject("/users/222/posts/1/comments", RouteMethods.GET)
@@ -155,6 +159,36 @@ describe("Router", () => {
       expect(params.size).toEqual(2);
       expect(params.get("userId")).toEqual("222");
       expect(params.get("postId")).toEqual("1");
+    });
+  });
+
+  describe("query params", () => {
+    it("should match correctly the route handler when the url contains query params", async () => {
+      getPostCommentsHandler.mockReset();
+      await router.handleRequest(
+        createRequestObject(
+          "/users/222/posts/1/comments?q1=a&q2=b&q3=c",
+          RouteMethods.GET
+        )
+      );
+      expect(getPostCommentsHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should extract the query params and passed them in the request object", async () => {
+      getPostCommentsHandler.mockReset();
+      await router.handleRequest(
+        createRequestObject(
+          "/users/222/posts/1/comments?q1=a&q2=b&q3=c",
+          RouteMethods.GET
+        )
+      );
+      const request = getPostCommentsHandler.mock.calls[0][0];
+      const query = request.queryParams;
+
+      expect(query.size).toEqual(3);
+      expect(query.get("q1")).toEqual("a");
+      expect(query.get("q2")).toEqual("b");
+      expect(query.get("q3")).toEqual("c");
     });
   });
 });

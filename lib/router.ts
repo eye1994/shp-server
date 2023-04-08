@@ -1,66 +1,66 @@
 import http from "http";
 import { createResponse, Request } from "./request";
 import { Response } from "./response";
-import { RouteFragmenet } from "./route-fragment";
+import { RouteFragment } from "./route-fragment";
 import { RouteHandler } from "./types/response-handler";
 import { RouteFragmentOptions } from "./types/route-fragment-options";
 import { RouteMethod } from "./types/route-method";
 
 export class Router {
-  __ROUTER__: RouteFragmenet;
+  __ROUTER__: RouteFragment;
 
   private readonly PARAMETER_FRAGMENT_NAME = "$$PARAM$$";
 
   constructor() {
-    this.__ROUTER__ = new RouteFragmenet("/");
+    this.__ROUTER__ = new RouteFragment("/");
   }
 
   insertHandler(route: string, method: RouteMethod, handler: RouteHandler) {
-    const fragmenet = this.findOrCreateRouteFragment(route);
+    const fragment = this.findOrCreateRouteFragment(route);
 
-    if (fragmenet.handlers.has(method)) {
+    if (fragment.handlers.has(method)) {
       throw new Error(`Route ${route} with method ${method} is already used`);
     }
 
-    fragmenet.handlers.set(method, handler);
+    fragment.handlers.set(method, handler);
   }
 
-  // For now just to simulate that the correct handler is beeing called
+  // For now just to simulate that the correct handler is being called
   // handleRequest(route: string, method: RouteMethod): Response {
-  async handleRequest(req: http.IncomingMessage): Promise<Response> {
-    const url = req.url;
-    const method = req.method as RouteMethod;
-
-    if (!url || !method) {
+  async handleRequest(_req: http.IncomingMessage): Promise<Response> {
+    if (!_req.url || !_req.method) {
       return new Response({}, { status: 404 });
     }
 
-    const parts = this.getRouteParts(url);
+    const req = await createResponse(_req);
+    const pathname = req.pathname as string;
+    const method = req.method as RouteMethod;
+
+    const parts = this.getRouteParts(pathname);
     let currentFragment = this.__ROUTER__;
-    const request = await createResponse(req);
 
     for (const part of parts) {
       const routeFragment =
         this.findChildrenFragment(
           currentFragment,
-          this.extractFramgentNameFromPart(part)
-        ) || this.findChildreFragmentOfTypeParam(currentFragment);
+          this.extractFragmentNameFromPart(part)
+        ) || this.findChildrenFragmentOfTypeParam(currentFragment);
 
       if (routeFragment == null) {
         return new Response({}, { status: 404 });
       }
 
       if (!!routeFragment.getParameterName()) {
-        request.params.set(routeFragment.getParameterName() as string, part);
+        req.params.set(routeFragment.getParameterName() as string, part);
       }
 
       currentFragment = routeFragment;
     }
 
-    return currentFragment.handle(method, request);
+    return currentFragment.handle(method, req);
   }
 
-  private findOrCreateRouteFragment(route: string): RouteFragmenet {
+  private findOrCreateRouteFragment(route: string): RouteFragment {
     const parts = this.getRouteParts(route);
 
     let currentFragment = this.__ROUTER__;
@@ -68,7 +68,7 @@ export class Router {
     for (const part of parts) {
       const routeFragment = this.findChildrenFragment(
         currentFragment,
-        this.extractFramgentNameFromPart(part)
+        this.extractFragmentNameFromPart(part)
       );
 
       if (routeFragment != null) {
@@ -84,9 +84,9 @@ export class Router {
   }
 
   private findChildrenFragment(
-    routeFragment: RouteFragmenet,
+    routeFragment: RouteFragment,
     fragmentName: string
-  ): RouteFragmenet | null {
+  ): RouteFragment | null {
     for (const currentRouteFragment of routeFragment.children) {
       if (currentRouteFragment.fragment === fragmentName) {
         return currentRouteFragment;
@@ -96,9 +96,9 @@ export class Router {
     return null;
   }
 
-  private findChildreFragmentOfTypeParam(
-    routeFragment: RouteFragmenet
-  ): RouteFragmenet | null {
+  private findChildrenFragmentOfTypeParam(
+    routeFragment: RouteFragment
+  ): RouteFragment | null {
     for (const currentRouteFragment of routeFragment.children) {
       if (currentRouteFragment.fragment === this.PARAMETER_FRAGMENT_NAME) {
         return currentRouteFragment;
@@ -121,7 +121,7 @@ export class Router {
     return part.startsWith(":");
   }
 
-  private extractFramgentNameFromPart(part: string) {
+  private extractFragmentNameFromPart(part: string) {
     return this.isParameterPart(part) ? this.PARAMETER_FRAGMENT_NAME : part;
   }
 
@@ -129,10 +129,10 @@ export class Router {
     return part.replace(":", "");
   }
 
-  private createRouteFragmentFromPart(part: string): RouteFragmenet {
+  private createRouteFragmentFromPart(part: string): RouteFragment {
     const options: RouteFragmentOptions = this.isParameterPart(part)
       ? { parameterName: this.extractParameterNameFromPart(part) }
       : {};
-    return new RouteFragmenet(this.extractFramgentNameFromPart(part), options);
+    return new RouteFragment(this.extractFragmentNameFromPart(part), options);
   }
 }

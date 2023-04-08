@@ -5,11 +5,11 @@ import { RouteMiddleware } from "./types/route-middleware";
 import { Request } from "./request";
 import { Response } from "./response";
 
-export class RouteFragmenet {
+export class RouteFragment {
   fragment: string;
-  middlewares: RouteMiddleware[] = [];
+  middleware: RouteMiddleware[] = [];
   handlers = new Map<RouteMethod, RouteHandler>();
-  children: RouteFragmenet[] = [];
+  children: RouteFragment[] = [];
   private readonly parameterName?: string;
 
   constructor(fragment: string, options?: RouteFragmentOptions) {

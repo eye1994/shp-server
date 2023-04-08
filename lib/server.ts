@@ -7,7 +7,7 @@ import { RouteMethods } from "./types/route-methods";
 export class SHPServer {
   private router: Router;
   private httpServer;
-
+  
   constructor() {
     this.router = new Router();
     this.httpServer = http.createServer(this.onRequest.bind(this))

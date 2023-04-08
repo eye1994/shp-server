@@ -10,16 +10,22 @@ import { RouteMethod } from "./types/route-method";
 export class Request {
   body?: string | JSONData;
   url?: string;
+  pathname?: string;
   method?: RouteMethod | undefined;
   headers: Headers = new Map<string, string | string[] | undefined>();
   params: Params = new Map<string, string>();
   queryParams: Params = new Map();
 
   constructor(req: http.IncomingMessage) {
-    this.url = req.url;
-    this.method = req.method as RouteMethod | undefined;
+    const { pathname, query } = url.parse(req.url || "", true);
 
-    // const { pathname, path, href, query } = url.parse(req.url || "");
+    this.method = req.method as RouteMethod | undefined;
+    this.url = req.url || "";
+    this.pathname = pathname || "";
+
+    if (query) {
+      this.queryParams = new Map(Object.entries(query));
+    }
 
     if (req.headers) {
       this.headers = new Map(Object.entries(req.headers));

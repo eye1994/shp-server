@@ -21,6 +21,8 @@ export class Response {
 
     if (typeof body !== "string" && !this.headers.has("content-type")) {
       this.headers.set("content-type", "application/json");
+    } else if (!this.headers.has("content-type")) {
+      this.headers.set("content-type", "text/plain");
     }
   }
 }

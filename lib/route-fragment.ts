@@ -1,4 +1,4 @@
-import { RouteHandler } from "./types/response-handler";
+import { RouteHandler } from "./types/route-handler";
 import { RouteFragmentOptions } from "./types/route-fragment-options";
 import { RouteMethod } from "./types/route-method";
 import { RouteMiddleware } from "./types/route-middleware";
@@ -21,7 +21,7 @@ export class RouteFragment {
     return this.parameterName;
   }
 
-  handle(method: RouteMethod, request: Request): Response {
+  handle(method: RouteMethod, request: Request): Response | Promise<Response> {
     if (!this.handlers.has(method)) {
       return new Response({}, { status: 404 });
     }

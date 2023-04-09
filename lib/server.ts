@@ -1,6 +1,6 @@
 import http, { ServerResponse } from "http";
 import { Router } from "./router";
-import { RouteHandler } from "./types/response-handler";
+import { RouteHandler } from "./types/route-handler";
 import { RouteMethods } from "./types/route-methods";
 
 export class SHPServer {
@@ -33,17 +33,25 @@ export class SHPServer {
   }
 
   private onRequest(req: http.IncomingMessage, res: ServerResponse) {
-    this.router.handleRequest(req).then((response) => {
-      res.writeHead(
-        response.status,
-        Object.fromEntries(response?.headers.entries())
-      );
+    this.router.handleRequest(req).then(
+      (response) => {
+        res.writeHead(
+          response.status,
+          Object.fromEntries(response?.headers.entries())
+        );
 
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        res.end(JSON.stringify(response.body));
-      } else {
-        res.end(response.body);
+        if (
+          response.headers.get("content-type")?.includes("application/json")
+        ) {
+          res.end(JSON.stringify(response.body));
+        } else {
+          res.end(response.body);
+        }
+      },
+      (error) => {
+        res.writeHead(500, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error }));
       }
-    });
+    );
   }
 }

@@ -1,6 +1,7 @@
 import http from "http";
 import { Router } from "../lib/router";
 import { RouteMethods } from "./../lib";
+import { Response } from "../lib/response";
 import { createRequestObject } from "./helpers/create-request-object";
 
 /*
@@ -189,6 +190,22 @@ describe("Router", () => {
       expect(query.get("q1")).toEqual("a");
       expect(query.get("q2")).toEqual("b");
       expect(query.get("q3")).toEqual("c");
+    });
+  });
+
+  describe("promise handler", () => {
+    it("should wait for the returned promise to resolve", async () => {
+      getPostCommentsHandler.mockImplementation(() => {
+        return new Promise((resolve) =>
+          resolve(new Response({ text: "Hello world" }))
+        );
+      });
+      await router.handleRequest(
+        createRequestObject("/users/222/posts/1/comments", RouteMethods.GET)
+      );
+      expect(postUserHandler.mock.calls[0][0].body).toEqual({
+        test: "testing",
+      });
     });
   });
 });

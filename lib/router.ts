@@ -2,7 +2,7 @@ import http from "http";
 import { createResponse, Request } from "./request";
 import { Response } from "./response";
 import { RouteFragment } from "./route-fragment";
-import { RouteHandler } from "./types/response-handler";
+import { RouteHandler } from "./types/route-handler";
 import { RouteFragmentOptions } from "./types/route-fragment-options";
 import { RouteMethod } from "./types/route-method";
 
@@ -25,8 +25,6 @@ export class Router {
     fragment.handlers.set(method, handler);
   }
 
-  // For now just to simulate that the correct handler is being called
-  // handleRequest(route: string, method: RouteMethod): Response {
   async handleRequest(_req: http.IncomingMessage): Promise<Response> {
     if (!_req.url || !_req.method) {
       return new Response({}, { status: 404 });

@@ -1,6 +1,6 @@
 export * from "./headers";
 export * from "./params";
-export * from "./response-handler";
+export * from "./route-handler";
 export * from "./route-fragment-options";
 export * from "./route-method";
 export * from "./route-methods";

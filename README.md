@@ -93,7 +93,7 @@ import { Request, Response } from "shp-server";
 server.get("/users/:userId/comments", (request: Request) => {
   const response = new Response();
   response.headers.set("access-control-allow-origin", "*");
-  return new Response({});
+  return response;
 });
 ```
 

@@ -17,7 +17,7 @@ npm start
 npm run test
 ```
 
-### Usage example
+### Usage examples
 
 ```typescript
 const server = new SHPServer();
@@ -36,6 +36,65 @@ server.get("/users/:userId/comments", () => {
 });
 
 server.listen(3000);
+```
+
+#### Reading the request body
+
+The response body is automatically parsed as JSON if the request header content-type: "application/json" is present. If the header is not present the request.body will be set as String. Currently the server can handle only "application/json" or "text/plain" content type, in feature this will be extendable by using a middleware.
+
+```typescript
+import { Request, Response } from "shp-server";
+
+server.post("/users/:userId/comments", (request: Request) => {
+  const body = request.body;
+  return new Response({});
+});
+```
+
+#### Reading the route params
+
+```typescript
+import { Request, Response } from "shp-server";
+
+server.get("/users/:userId/comments", (request: Request) => {
+  const { userId } = request.params;
+  return new Response({});
+});
+```
+
+#### Reading the query params
+
+```typescript
+import { Request, Response } from "shp-server";
+
+server.get("/users/:userId/comments?q1=a&q2=b&q3=c", (request: Request) => {
+  const { q1, q2, q3 } = request.queryParams;
+  return new Response({});
+});
+```
+
+#### Reading the request headers
+
+```typescript
+import { Request, Response } from "shp-server";
+
+server.get("/users/:userId/comments", (request: Request) => {
+  const headers = request.headers;
+  console.log(headers.get("content-type"));
+  return new Response({});
+});
+```
+
+#### Responding with custom headers
+
+```typescript
+import { Request, Response } from "shp-server";
+
+server.get("/users/:userId/comments", (request: Request) => {
+  const response = new Response();
+  response.headers.set("access-control-allow-origin", "*");
+  return new Response({});
+});
 ```
 
 ### Features

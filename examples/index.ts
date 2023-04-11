@@ -1,5 +1,5 @@
-import { SHPServer, Request } from "./lib";
-import { Response } from "./lib/response";
+import { SHPServer, Request } from "./../lib";
+import { Response } from "./../lib/response";
 
 const server = new SHPServer();
 

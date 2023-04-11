@@ -1,6 +1,6 @@
 # SHP - Simple HTTP Server
 
-![Tests branch parameter](https://github.com/github/docs/actions/workflows/node.js.yml/badge.svg?branch=main)
+![Tests branch parameter](https://github.com/eye1994/shp-server/actions/workflows/node.js.yml/badge.svg?branch=main)
 
 The scope of the project is to explore how to build a library in NodeJS for creating REST API's without using third party libraries.
 

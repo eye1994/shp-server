@@ -1,6 +1,7 @@
 import http from "http";
-import { Response, SHPServer } from "../lib";
+import { Response, Request, SHPServer } from "../lib";
 import request, { Response as SuperTestResponse } from "supertest";
+import { Context } from "../lib/context";
 
 jest.spyOn(http, "createServer");
 const server = new SHPServer();
@@ -21,6 +22,28 @@ const postPost = jest.fn();
 const putPost = jest.fn();
 const deletePost = jest.fn();
 
+const rootMiddleware = jest
+  .fn()
+  .mockImplementation((request: Request, context: Context) => {
+    context.headers.set("accept-language", "en-US");
+  });
+
+const adminMiddleware = jest.fn().mockImplementation((request: Request) => {
+  const token = request.headers.get("authorization");
+  if (!token) {
+    return new Response({ error: "Unauthorized" }, { status: 401 });
+  }
+});
+
+const getStatistics = jest.fn().mockImplementation(() => {
+  return new Response({ views: 0 });
+});
+
+server.middleware("/", rootMiddleware);
+server.middleware("/admin", adminMiddleware);
+
+server.get("/admin/statistics", getStatistics);
+
 server.get("/users", getUsers);
 server.post("/users", postUser);
 server.get("/users/:userId", getUserById);
@@ -37,6 +60,37 @@ server.get("/users/:userId/posts/:postId/comments", getCommentsHandler);
 server.post("/users/:userId/posts/:postId/comments", postCommentsHandler);
 
 describe("SHP Server", () => {
+  it("should run the root middleware and add accept-language header to all the requests", () => {
+    getUsers.mockReset().mockReturnValue(new Response({}));
+    return request(httpServer)
+      .get("/users")
+      .expect("accept-language", "en-US")
+      .then(() => {
+        expect(rootMiddleware).toBeCalledTimes(1);
+      });
+  });
+
+  describe("admin middleware", () => {
+    it("should return 401 when Authorization header is not present", () => {
+      return request(httpServer)
+        .get("/admin/statistics")
+        .then((response) => {
+          expect(response.body).toEqual({ error: "Unauthorized" });
+          expect(response.status).toEqual(401);
+        });
+    });
+
+    it("should run the statistics handler when the Authorization header is present", () => {
+      return request(httpServer)
+        .get("/admin/statistics")
+        .set("authorization", "MOCK")
+        .then((response) => {
+          expect(response.body).toEqual({ views: 0 });
+          expect(response.status).toEqual(200);
+        });
+    });
+  });
+
   it("should call the getUsers handler when a GET call is made at /users", () => {
     getUsers.mockReset().mockReturnValue(new Response({}));
     return request(httpServer)

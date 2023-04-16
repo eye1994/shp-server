@@ -1,10 +1,12 @@
 import http from "http";
-import { createResponse, Request } from "./request";
+import { createResponse } from "./request";
 import { Response } from "./response";
 import { RouteFragment } from "./route-fragment";
 import { RouteHandler } from "./types/route-handler";
 import { RouteFragmentOptions } from "./types/route-fragment-options";
 import { RouteMethod } from "./types/route-method";
+import { Context } from "./context";
+import { RouteMiddleware } from "./types/route-middleware";
 
 export class Router {
   __ROUTER__: RouteFragment;
@@ -25,17 +27,33 @@ export class Router {
     fragment.handlers.set(method, handler);
   }
 
+  insertMiddleware(route: string, handler: RouteMiddleware) {
+    const fragment = this.findOrCreateRouteFragment(route);
+    fragment.middleware.push(handler);
+  }
+
   async handleRequest(_req: http.IncomingMessage): Promise<Response> {
     if (!_req.url || !_req.method) {
       return new Response({}, { status: 404 });
     }
 
     const req = await createResponse(_req);
+    const context = new Context();
     const pathname = req.pathname as string;
     const method = req.method as RouteMethod;
 
     const parts = this.getRouteParts(pathname);
     let currentFragment = this.__ROUTER__;
+
+    if (currentFragment.middleware.length > 0) {
+      for (const middleware of currentFragment.middleware) {
+        const response = await Promise.resolve(middleware(req, context));
+        if (response) {
+          return response;
+        }
+      }
+    }
+
 
     for (const part of parts) {
       const routeFragment =
@@ -52,13 +70,32 @@ export class Router {
         req.params.set(routeFragment.getParameterName() as string, part);
       }
 
+      if (routeFragment.middleware.length > 0) {
+        for (const middleware of routeFragment.middleware) {
+          const response = await Promise.resolve(middleware(req, context));
+          if (response) {
+            return response;
+          }
+        }
+      }
+
       currentFragment = routeFragment;
     }
 
-    return currentFragment.handle(method, req);
+    return Promise.resolve(currentFragment.handle(method, req, context)).then((response: Response) => {
+      for (const [header, headerValue] of context.headers) {
+        response.headers.set(header, headerValue)
+      }
+
+      return response;
+    });
   }
 
   private findOrCreateRouteFragment(route: string): RouteFragment {
+    if (route === '/') {
+      return this.__ROUTER__;
+    }
+
     const parts = this.getRouteParts(route);
 
     let currentFragment = this.__ROUTER__;

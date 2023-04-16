@@ -1,4 +1,4 @@
-import { SHPServer, Request } from "./../lib";
+import { SHPServer } from "./../lib";
 import { Response } from "./../lib/response";
 
 const server = new SHPServer();
@@ -9,7 +9,7 @@ server.get("/users", () => {
 server.get("/users/:userId", () => {
   return new Response({ id: 1, name: "John Doe" });
 });
-server.get("/users/:userId/articles", (request: Request) => {
+server.get("/users/:userId/articles", () => {
   throw new Error("test server error");
 });
 server.get("/users/:userId/images", () => {

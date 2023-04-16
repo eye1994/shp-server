@@ -4,6 +4,7 @@ import { RouteMethod } from "./types/route-method";
 import { RouteMiddleware } from "./types/route-middleware";
 import { Request } from "./request";
 import { Response } from "./response";
+import { Context } from "./context";
 
 export class RouteFragment {
   fragment: string;
@@ -21,14 +22,14 @@ export class RouteFragment {
     return this.parameterName;
   }
 
-  handle(method: RouteMethod, request: Request): Response | Promise<Response> {
+  handle(method: RouteMethod, request: Request, context: Context): Response | Promise<Response> {
     if (!this.handlers.has(method)) {
       return new Response({}, { status: 404 });
     }
 
     const handler = this.handlers.get(method);
     try {
-      return handler!(request);
+      return handler!(request, context);
     } catch (e) {
       return new Response({ error: e?.toString() }, { status: 500 });
     }

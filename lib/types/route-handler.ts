@@ -1,4 +1,5 @@
-import { Request } from "./../request";
+import { Context } from "../context";
 import { Response } from "../response";
+import { Request } from "./request";
 
-export type RouteHandler = (request: Request) => Response | Promise<Response>;
+export type RouteHandler = (request: Request, context: Context) => Response | Promise<Response>;

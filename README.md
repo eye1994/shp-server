@@ -97,6 +97,25 @@ server.get("/users/:userId/comments", (request: Request) => {
 });
 ```
 
+#### Route middleware examples
+
+import { Request, Response } from "shp-server";
+
+```typescript
+import { Request, Response, Context } from "shp-server";
+
+server.middleware("/", (request: Request, context: Context) => {
+  context.headers.set("accept-language", "en-US");
+});
+
+server.middleware("/admin", (request: Request) => {
+  const token = request.headers.get("authorization");
+  if (!token || !validToken(token)) {
+    return new Response({ error: "Unauthorized" }, { status: 401 });
+  }
+});
+```
+
 ### Features
 
 - [x] Routing with support for nested routes
@@ -105,7 +124,7 @@ server.get("/users/:userId/comments", (request: Request) => {
 - [x] Provide the request body inside the Request object
 - [x] Provide Request headers in the Request object
 - [x] Allow to respond with custom headers using the Response object
-- [ ] Route Middleware that can be mounted at the server level or at a specific route
+- [x] Route Middleware that can be mounted at the server level or at a specific route
 - [ ] Provide logging middleware
 - [ ] Provide CORS middleware
 - [ ] Allow routes to be split in multiple files by creating another Route instance that mounts to another route
